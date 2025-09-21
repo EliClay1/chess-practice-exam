@@ -1,5 +1,7 @@
 package chess;
 
+import java.util.List;
+
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -7,6 +9,8 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessBoard {
+
+    final ChessPiece[][] gameBoard = new ChessPiece[8][8];
 
     public ChessBoard() {
         
@@ -19,7 +23,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        throw new RuntimeException("Not implemented");
+        gameBoard[position.getRow() - 1][position.getColumn() - 1] = piece;
     }
 
     /**
@@ -30,7 +34,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        throw new RuntimeException("Not implemented");
+        return gameBoard[position.getRow() - 1][position.getColumn() - 1];
     }
 
     /**
@@ -38,6 +42,16 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
+
+        // TODO - Create a loop functionality that will automatically cycle through piece creation.
+        List<ChessPiece.PieceType> gameLayoutPieces = List.of(ChessPiece.PieceType.ROOK, ChessPiece.PieceType.KNIGHT,
+                ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KING, ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.BISHOP,
+                ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK);
+
+        for (var col : gameBoard) {
+            // TODO - Remember how to implement the loop into this.
+        }
+
         throw new RuntimeException("Not implemented");
     }
 }
