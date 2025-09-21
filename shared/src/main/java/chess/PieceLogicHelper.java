@@ -14,7 +14,6 @@ public class PieceLogicHelper {
         int[][] bishopMovements = {{1,1}, {-1,1}, {-1,-1}, {1,-1}};
         int[][] rookMovements = {{1,0}, {0,1}, {-1,0}, {0,-1}};
         int[][] knightMovements = {{2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,-2}, {2,-1}};
-        int[][] pawnMovements = {{1,0}, {1,1}, {1,-1}}; // TODO - the two is technically because of first move.
 
         if (currentPiece.getPieceType() == ChessPiece.PieceType.BISHOP) {
             for (var dir : bishopMovements) {
@@ -57,11 +56,12 @@ public class PieceLogicHelper {
         }
 
         if (currentPiece.getPieceType() == ChessPiece.PieceType.PAWN) {
-            for (var dir : pawnMovements) {
+            for (var dir : rookMovements) {
                 int dRow = dir[0];
                 int dCol = dir[1];
-                pawnHelper(board, currentPosition, dRow, dCol, currentPiece.getTeamColor());
+                pawnHelper(board, currentPosition, currentPiece.getTeamColor(), dRow, dCol);
             }
+
         }
 
         return listOfMoves;
@@ -114,51 +114,59 @@ public class PieceLogicHelper {
         }
     }
 
-    void pawnHelper(ChessBoard board, ChessPosition currentPosition, int dRow, int dCol, ChessGame.TeamColor currentTeamColor) {
+    void pawnHelper(ChessBoard board, ChessPosition currentPosition, ChessGame.TeamColor currentTeamColor, int dRow, int dCol) {
         int direction = getDirection(currentTeamColor);
-        boolean atStart = isStartingPiece(currentPosition, currentTeamColor);
-        int nextRow = currentPosition.getRow() + dRow * direction;
-        int nextCol = currentPosition.getRow() + dCol * direction;
-        List<ChessPiece.PieceType> promotionOptions = List.of(ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.BISHOP,
-                ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK);
+        int nextRow = currentPosition.getRow() + direction;
+        int nextCol = currentPosition.getColumn() + dCol;
 
         ChessPosition nextPosition = new ChessPosition(nextRow, nextCol);
+
         if (!isWithinBoardBounds(board, nextPosition)) {
             return;
         }
+
         ChessPiece nextPositionPiece = board.getPiece(nextPosition);
 
-        // TODO Promotional Functionality
-        if ((nextRow == 8 && currentTeamColor == ChessGame.TeamColor.WHITE && nextPositionPiece == null) ||
-                (nextRow == 0 && currentTeamColor == ChessGame.TeamColor.BLACK && nextPositionPiece == null)) {
+        // Check forward
+        if (dRow > 0) {
+            if (nextPositionPiece == null) {
+                //promotion
+                if (promotion(nextRow, currentTeamColor, currentPosition, nextPosition)) {
+                    return;
+                }
+                listOfMoves.add(new ChessMove(currentPosition, nextPosition, null));
+                if (isStartingPiece(currentPosition, currentTeamColor)) {
+                    int nextNextRow = nextRow + direction;
+                    ChessPosition nextNextPosition = new ChessPosition(nextNextRow, nextCol);
+                    ChessPiece nextNextPositionPiece = board.getPiece(nextNextPosition);
+                    if (nextNextPositionPiece == null ) {
+                        listOfMoves.add(new ChessMove(currentPosition, nextNextPosition, null));
+                    }
+                }
+            }
+        }
+        // otherwise it is diagonal
+        if (dRow == 0) {
+            if (nextPositionPiece != null && nextPositionPiece.getTeamColor() != currentTeamColor) {
+                if (promotion(nextRow, currentTeamColor, currentPosition, nextPosition)) {
+                    return;
+                }
+                listOfMoves.add(new ChessMove(currentPosition, nextPosition, null));
+            }
+        }
+    }
+
+    boolean promotion(int nextRow, ChessGame.TeamColor currentTeamColor, ChessPosition currentPosition, ChessPosition nextPosition) {
+        List<ChessPiece.PieceType> promotionOptions = List.of(ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.BISHOP,
+                ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK);
+
+        if ((nextRow == 8 && currentTeamColor == ChessGame.TeamColor.WHITE) ||
+                (nextRow == 1 && currentTeamColor == ChessGame.TeamColor.BLACK)) {
             for (var piece : promotionOptions) {
                 listOfMoves.add(new ChessMove(currentPosition, nextPosition, piece));
             }
+            return true;
         }
-
-
-        if (((nextRow == currentPosition.getRow() + direction) && nextPositionPiece == null)) {
-            listOfMoves.add(new ChessMove(currentPosition, nextPosition, null));
-        }
-
-
-
-
-
-
-
-
-
-
-
-        // check if there is a pawn directly in front. This includes checking if the row above / below is in bounds.
-
-
-        /*
-        * if atStart, it needs to do a double check to see the position ahead of it. This is entirely
-        * dependent on the direction, which in this case could be multiplied * 2 to get the second position.
-        * realistically this needs to happen at the end.
-        * */
-
+        return false;
     }
 }
